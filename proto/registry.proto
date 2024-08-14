@@ -1,0 +1,33 @@
+syntax = "proto3";
+import "proto/input.proto";
+
+package pmx;
+
+message EmptyRequest {}
+
+message ByIdRequest {
+  uint32 id = 1;
+}
+
+message ListInputsReply {
+  repeated pmx.input.PmxInput inputs = 1;
+}
+
+message UpdateInputNameRequest {
+  uint32 id = 1;
+  string name = 2;
+}
+
+message UpdateInputPortAssignmentsRequest {
+  uint32 id = 1;
+  pmx.input.PmxInputType input_type = 3;
+  optional string left_port_path = 4;
+  optional string right_port_path = 5;
+}
+
+service PmxRegistry {
+  rpc ListInputs(EmptyRequest) returns (ListInputsReply);
+  rpc GetInput(ByIdRequest) returns (pmx.input.PmxInput);
+  rpc UpdateInputName(UpdateInputNameRequest) returns (pmx.input.PmxInput);
+  rpc UpdateInputPortAssignments(UpdateInputPortAssignmentsRequest) returns (pmx.input.PmxInput);
+}

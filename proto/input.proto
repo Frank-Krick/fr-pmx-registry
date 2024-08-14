@@ -1,0 +1,16 @@
+syntax = "proto3";
+package pmx.input;
+
+enum PmxInputType {
+  MONO_INPUT = 0;
+  STEREO_INPUT = 1;
+  NONE = 3;
+}
+
+message PmxInput {
+  uint32 id = 1;
+  string name = 2;
+  PmxInputType input_type = 3;
+  optional string left_port_path = 4;
+  optional string right_port_path = 5;
+}

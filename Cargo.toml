@@ -1,0 +1,22 @@
+[package]
+name = "fr-pmx-registry"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "fr-pmx-registry"
+path = "src/server.rs"
+
+[[bin]]
+name = "fr-pmx-registry-cli"
+path = "src/client.rs"
+
+[dependencies]
+clap = { version = "4.5.15", features = ["derive"] }
+itertools = "0.13.0"
+prost = "0.13.1"
+tokio = { version = "1.39.2", features = ["full"] }
+tonic = "0.12.1"
+
+[build-dependencies]
+tonic-build = "0.12.1"
