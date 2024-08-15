@@ -1,11 +1,13 @@
-#[derive(Debug)]
+use serde::{Deserialize, Serialize};
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct MixerInput {
     pub name: String,
     pub pipewire_ports: PipewirePorts,
     pub id: u32,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum PipewirePorts {
     None,
     Mono(String),
@@ -25,6 +27,7 @@ impl MixerInput {
 #[derive(Debug)]
 pub struct Registry {
     inputs: [MixerInput; 9],
+    sender: tokio::sync::mpsc::UnboundedSender<[MixerInput; 9]>,
 }
 
 #[derive(Debug)]
@@ -52,7 +55,7 @@ impl std::error::Error for NotFoundError {
 }
 
 impl Registry {
-    pub fn new() -> Self {
+    pub fn new(sender: tokio::sync::mpsc::UnboundedSender<[MixerInput; 9]>) -> Self {
         Registry {
             inputs: [
                 MixerInput::new("DSMPL", PipewirePorts::None, 1),
@@ -65,6 +68,7 @@ impl Registry {
                 MixerInput::new("System 1m", PipewirePorts::None, 8),
                 MixerInput::new("Cobalt 8m", PipewirePorts::None, 9),
             ],
+            sender,
         }
     }
 
@@ -88,6 +92,7 @@ impl Registry {
             .find(|(_index, input)| input.id == id)
         {
             self.inputs[input.0].name = String::from(name);
+            self.sender.send(self.inputs.clone()).unwrap();
             Ok(())
         } else {
             Err(std::boxed::Box::new(NotFoundError {}))
@@ -106,6 +111,7 @@ impl Registry {
             .find(|(_index, input)| input.id == id)
         {
             self.inputs[input.0].pipewire_ports = ports;
+            self.sender.send(self.inputs.clone()).unwrap();
             Ok(())
         } else {
             Err(std::boxed::Box::new(NotFoundError {}))

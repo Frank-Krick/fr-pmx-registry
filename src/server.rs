@@ -20,6 +20,7 @@ pub mod pmx {
     }
 }
 
+mod file_writer;
 mod registry;
 
 #[derive(Debug)]
@@ -28,9 +29,9 @@ pub struct PmxRegistryService {
 }
 
 impl PmxRegistryService {
-    fn new() -> Self {
+    fn new(sender: tokio::sync::mpsc::UnboundedSender<[MixerInput; 9]>) -> Self {
         PmxRegistryService {
-            registry: RwLock::new(Registry::new()),
+            registry: RwLock::new(Registry::new(sender)),
         }
     }
 }
@@ -157,11 +158,21 @@ impl PmxRegistry for PmxRegistryService {
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let addr = "127.0.0.1:50001".parse().unwrap();
-    let service = PmxRegistryService::new();
-    Server::builder()
+    let (sender, receiver) = tokio::sync::mpsc::unbounded_channel();
+    let data_path = fr_pmx_config_lib::read_data_file_paths().pmx_registry_data_file;
+    let service_address = fr_pmx_config_lib::read_service_urls()
+        .pmx_registry_url
+        .replace("http://", "");
+    let addr = service_address.parse().unwrap();
+    let service = PmxRegistryService::new(sender);
+    let server = Server::builder()
         .add_service(PmxRegistryServer::new(service))
-        .serve(addr)
-        .await?;
-    Ok(())
+        .serve(addr);
+
+    let file_writer = file_writer::run_file_writer(receiver, &data_path);
+
+    tokio::select! {
+        _ = server => {Ok(())}
+        _ = file_writer => {Ok(())}
+    }
 }
