@@ -1,0 +1,8 @@
+syntax = "proto3";
+package pmx.looper;
+
+message PmxLooper {
+  uint32 id = 1;
+  string name = 2;
+  uint32 loop_number = 3;
+}

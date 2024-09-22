@@ -13,4 +13,5 @@ message PmxInput {
   PmxInputType input_type = 3;
   optional string left_port_path = 4;
   optional string right_port_path = 5;
+  string group_channel_strip_name = 6;
 }

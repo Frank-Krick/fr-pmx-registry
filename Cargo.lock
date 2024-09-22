@@ -408,6 +408,7 @@ dependencies = [
  "clap",
  "fr-logging",
  "fr-pmx-config-lib",
+ "home",
  "itertools",
  "prost",
  "serde",

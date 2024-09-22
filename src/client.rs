@@ -44,6 +44,10 @@ enum Commands {
         #[arg(short, long)]
         id: u32,
     },
+    ListPlugins {},
+    ListChannelStrips {},
+    ListLoopers {},
+    ListOutputs {},
 }
 
 pub mod pmx {
@@ -51,6 +55,22 @@ pub mod pmx {
 
     pub mod input {
         tonic::include_proto!("pmx.input");
+    }
+
+    pub mod output {
+        tonic::include_proto!("pmx.output");
+    }
+
+    pub mod plugin {
+        tonic::include_proto!("pmx.plugin");
+    }
+
+    pub mod channel_strip {
+        tonic::include_proto!("pmx.channel_strip");
+    }
+
+    pub mod looper {
+        tonic::include_proto!("pmx.looper");
     }
 }
 
@@ -60,6 +80,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     if let Some(command) = cli_arguments.command {
         match command {
+            Commands::ListChannelStrips {} => {
+                let mut client = PmxRegistryClient::connect("http://127.0.0.1:50001").await?;
+                let request = Request::new(EmptyRequest {});
+                let response = client.list_channel_strips(request).await?;
+                println!("{response:#?}");
+            }
             Commands::ListInputs {} => {
                 let mut client = PmxRegistryClient::connect("http://127.0.0.1:50001").await?;
                 let request = Request::new(EmptyRequest {});
@@ -113,6 +139,24 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     right_port_path: Some(right_path),
                 });
                 let response = client.update_input_port_assignments(request).await?;
+                println!("{response:#?}");
+            }
+            Commands::ListPlugins {} => {
+                let mut client = PmxRegistryClient::connect("http://127.0.0.1:50001").await?;
+                let request = Request::new(EmptyRequest {});
+                let response = client.list_plugins(request).await?;
+                println!("{response:#?}");
+            }
+            Commands::ListLoopers {} => {
+                let mut client = PmxRegistryClient::connect("http://127.0.0.1:50001").await?;
+                let request = Request::new(EmptyRequest {});
+                let response = client.list_loopers(request).await?;
+                println!("{response:#?}");
+            }
+            Commands::ListOutputs {} => {
+                let mut client = PmxRegistryClient::connect("http://127.0.0.1:50001").await?;
+                let request = Request::new(EmptyRequest {});
+                let response = client.list_outputs(request).await?;
                 println!("{response:#?}");
             }
         }

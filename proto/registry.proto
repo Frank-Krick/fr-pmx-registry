@@ -1,5 +1,9 @@
 syntax = "proto3";
 import "proto/input.proto";
+import "proto/output.proto";
+import "proto/looper.proto";
+import "proto/plugin.proto";
+import "proto/channel_strip.proto";
 
 package pmx;
 
@@ -25,9 +29,65 @@ message UpdateInputPortAssignmentsRequest {
   optional string right_port_path = 5;
 }
 
+message ListOutputsReply {
+  repeated pmx.output.PmxOutput outputs = 1;
+}
+
+message AddOutputRequest {
+  string name = 2;
+  pmx.output.PmxOutputType output_type = 1;
+}
+
+message UpdateOutputNameRequest {
+  uint32 id = 1;
+  string name = 2;
+}
+
+message UpdateOutputPortAssignmentsRequest {
+  uint32 id = 1;
+  optional string left_port_path = 2;
+  optional string right_port_path = 3;
+}
+
+message RegisterPluginRequest {
+  pmx.plugin.PmxPlugin plugin = 1;
+}
+
+message ListPluginsReply {
+  repeated pmx.plugin.PmxPlugin plugins = 1;
+}
+
+message RegisterChannelStripRequest {
+  pmx.channel_strip.PmxChannelStrip channel_strip = 1;
+}
+
+message ListChannelStripsReply {
+  repeated pmx.channel_strip.PmxChannelStrip channel_strips = 1;
+}
+
+message RegisterLooperRequest {
+  uint32 loop_number = 1;
+}
+
+message RegisterLooperReply {
+  pmx.looper.PmxLooper looper = 1;
+}
+
+message ListLoopersReply {
+  repeated pmx.looper.PmxLooper loopers = 1;
+};
+
 service PmxRegistry {
+  rpc ListLoopers(EmptyRequest) returns (ListLoopersReply);
   rpc ListInputs(EmptyRequest) returns (ListInputsReply);
+  rpc ListOutputs(EmptyRequest) returns (ListOutputsReply);
   rpc GetInput(ByIdRequest) returns (pmx.input.PmxInput);
   rpc UpdateInputName(UpdateInputNameRequest) returns (pmx.input.PmxInput);
   rpc UpdateInputPortAssignments(UpdateInputPortAssignmentsRequest) returns (pmx.input.PmxInput);
+  rpc UpdateOutputPortAssignments(UpdateOutputPortAssignmentsRequest) returns (pmx.output.PmxOutput);
+  rpc ListPlugins(EmptyRequest) returns (ListPluginsReply);
+  rpc ListChannelStrips(EmptyRequest) returns (ListChannelStripsReply);
+  rpc RegisterPlugin(RegisterPluginRequest) returns (pmx.plugin.PmxPlugin);
+  rpc RegisterChannelStrip(RegisterChannelStripRequest) returns (pmx.channel_strip.PmxChannelStrip);
+  rpc RegisterLooper(RegisterLooperRequest) returns (pmx.looper.PmxLooper);
 }
