@@ -48,6 +48,7 @@ enum Commands {
     ListChannelStrips {},
     ListLoopers {},
     ListOutputs {},
+    ListOutputStages {},
 }
 
 pub mod pmx {
@@ -72,6 +73,10 @@ pub mod pmx {
     pub mod looper {
         tonic::include_proto!("pmx.looper");
     }
+
+    pub mod output_stage {
+        tonic::include_proto!("pmx.output_stage");
+    }
 }
 
 #[tokio::main]
@@ -80,6 +85,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     if let Some(command) = cli_arguments.command {
         match command {
+            Commands::ListOutputStages {} => {
+                let mut client = PmxRegistryClient::connect("http://127.0.0.1:50001").await?;
+                let request = Request::new(EmptyRequest {});
+                let response = client.list_output_stages(request).await?;
+                println!("{response:#?}");
+            }
             Commands::ListChannelStrips {} => {
                 let mut client = PmxRegistryClient::connect("http://127.0.0.1:50001").await?;
                 let request = Request::new(EmptyRequest {});

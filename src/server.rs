@@ -7,13 +7,14 @@ use tonic::{transport::Server, Request, Response, Status};
 use pmx::channel_strip::{PmxChannelStrip, PmxChannelStripType};
 use pmx::input::{PmxInput, PmxInputType};
 use pmx::looper::PmxLooper;
+use pmx::output_stage::PmxOutputStage;
 use pmx::plugin::{PmxPlugin, PmxPluginType};
 use pmx::pmx_registry_server::{PmxRegistry, PmxRegistryServer};
 use pmx::{
     ByIdRequest, EmptyRequest, ListChannelStripsReply, ListInputsReply, ListLoopersReply,
-    ListOutputsReply, ListPluginsReply, RegisterChannelStripRequest, RegisterLooperRequest,
-    RegisterPluginRequest, UpdateInputNameRequest, UpdateInputPortAssignmentsRequest,
-    UpdateOutputPortAssignmentsRequest,
+    ListOutputStagesReply, ListOutputsReply, ListPluginsReply, RegisterChannelStripRequest,
+    RegisterLooperRequest, RegisterOutputStageRequest, RegisterPluginRequest,
+    UpdateInputNameRequest, UpdateInputPortAssignmentsRequest, UpdateOutputPortAssignmentsRequest,
 };
 
 use crate::registry::{PipewirePorts, Registry};
@@ -39,6 +40,10 @@ pub mod pmx {
 
     pub mod looper {
         tonic::include_proto!("pmx.looper");
+    }
+
+    pub mod output_stage {
+        tonic::include_proto!("pmx.output_stage");
     }
 }
 
@@ -429,6 +434,48 @@ impl PmxRegistry for PmxRegistryService {
                 PipewirePorts::Mono(left) => Some(left.clone()),
                 PipewirePorts::Stereo(_, right) => Some(right.clone()),
             },
+        }))
+    }
+
+    async fn register_output_stage(
+        &self,
+        request: Request<RegisterOutputStageRequest>,
+    ) -> Result<Response<PmxOutputStage>, Status> {
+        let inner = request.into_inner();
+        let mut registry = self.registry.write().await;
+        registry.register_output_stage(PmxOutputStage {
+            id: 0,
+            name: inner.name.clone(),
+            left_channel_strip_id: inner.left_channel_strip_id,
+            right_channel_strip_id: inner.right_channel_strip_id,
+            cross_fader_plugin_id: inner.cross_fader_plugin_id,
+        });
+        Ok(Response::new(PmxOutputStage {
+            id: 0,
+            name: inner.name,
+            left_channel_strip_id: inner.left_channel_strip_id,
+            right_channel_strip_id: inner.right_channel_strip_id,
+            cross_fader_plugin_id: inner.cross_fader_plugin_id,
+        }))
+    }
+
+    async fn list_output_stages(
+        &self,
+        _request: Request<EmptyRequest>,
+    ) -> Result<Response<ListOutputStagesReply>, Status> {
+        let registry = self.registry.read().await;
+        let output_stages = registry.get_all_output_stages();
+        Ok(Response::new(ListOutputStagesReply {
+            output_stages: output_stages
+                .iter()
+                .map(|o| PmxOutputStage {
+                    id: o.id,
+                    name: o.name.clone(),
+                    left_channel_strip_id: o.left_channel_strip_id,
+                    right_channel_strip_id: o.right_channel_strip_id,
+                    cross_fader_plugin_id: o.cross_fader_plugin_id,
+                })
+                .collect(),
         }))
     }
 }

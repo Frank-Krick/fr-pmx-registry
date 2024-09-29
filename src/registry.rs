@@ -1,8 +1,9 @@
 use serde::{Deserialize, Serialize};
 
 use crate::pmx::{
-    channel_strip::{self, PmxChannelStrip},
+    channel_strip::{PmxChannelStrip, PmxChannelStripType},
     looper::PmxLooper,
+    output_stage::PmxOutputStage,
     plugin::PmxPlugin,
 };
 
@@ -106,6 +107,15 @@ pub struct ChannelStrip {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct OutputStage {
+    pub id: u32,
+    pub name: String,
+    pub left_channel_strip_id: u32,
+    pub right_channel_strip_id: u32,
+    pub cross_fader_plugin_id: u32,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Looper {
     pub id: u32,
     pub name: String,
@@ -121,6 +131,7 @@ pub struct Registry {
     plugins: Vec<Plugin>,
     channel_strips: Vec<ChannelStrip>,
     loopers: Vec<Looper>,
+    output_stages: Vec<OutputStage>,
 }
 
 impl Registry {
@@ -138,7 +149,22 @@ impl Registry {
             plugins: Vec::new(),
             channel_strips: Vec::new(),
             loopers: Vec::new(),
+            output_stages: Vec::new(),
         }
+    }
+
+    pub fn register_output_stage(&mut self, output_stage: PmxOutputStage) {
+        self.output_stages.push(OutputStage {
+            id: output_stage.id,
+            name: output_stage.name,
+            left_channel_strip_id: output_stage.left_channel_strip_id,
+            right_channel_strip_id: output_stage.right_channel_strip_id,
+            cross_fader_plugin_id: output_stage.cross_fader_plugin_id,
+        });
+    }
+
+    pub fn get_all_output_stages(&self) -> &[OutputStage] {
+        &self.output_stages
     }
 
     pub fn register_looper(&mut self, looper: PmxLooper) {
@@ -162,13 +188,13 @@ impl Registry {
             id: channel_strip.id,
             name: channel_strip.name.clone(),
             channel_strip_type: match channel_strip.channel_strip_type() {
-                channel_strip::PmxChannelStripType::Basic => ChannelStripType::Basic {
+                PmxChannelStripType::Basic => ChannelStripType::Basic {
                     saturator_plugin_id: channel_strip.saturator_plugin_id,
                     compressor_plugin_id: channel_strip.compressor_plugin_id,
                     equalizer_plugin_id: channel_strip.equalizer_plugin_id,
                     gain_plugin_id: channel_strip.gain_plugin_id,
                 },
-                channel_strip::PmxChannelStripType::CrossFaded => ChannelStripType::CrossFaded {
+                PmxChannelStripType::CrossFaded => ChannelStripType::CrossFaded {
                     cross_fader_plugin_id: channel_strip.cross_fader_plugin_id.unwrap(),
                     saturator_plugin_id: channel_strip.saturator_plugin_id,
                     compressor_plugin_id: channel_strip.compressor_plugin_id,
